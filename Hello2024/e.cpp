@@ -9,6 +9,7 @@ using namespace std;
 using ll = long long;
 using pll = pair<ll, ll>;
 using vl = vector<ll>;
+using vi = vector<int>;
 
 // ------------------------------------------------
 
@@ -16,12 +17,7 @@ constexpr ll INF = 1e18;
 constexpr ll MOD = 998244353;
 constexpr int MAXN = 5e3 + 7;
 ll fact[MAXN];
-
-void prepro() {
-    fact[0] = 1LL;
-    for (ll i = 1; i < MAXN; i++)
-        fact[i] = (fact[i - 1] * i) % MOD;
-}
+ll invfact[MAXN];
 
 ll qp(ll a, ll b) {
     if (b == 0) return 1LL;
@@ -36,23 +32,36 @@ ll inv(ll a) {
     return qp(a, MOD - 2);
 }
 
+void prepro() {
+    fact[0] = 1LL;
+    invfact[0] = 1LL;
+    for (ll i = 1; i < MAXN; i++) {
+        fact[i] = (fact[i - 1] * i) % MOD;
+        invfact[i] = inv(fact[i]);
+    }
+}
+
 ll newton(ll n, ll k) {
     if (k < 0 || k > n) return 0LL;
-    return (((fact[n] * inv(fact[k])) % MOD) * inv(fact[n - k])) % MOD;
+    return (((fact[n] * invfact[k]) % MOD) * invfact[n - k]) % MOD;
 }
 
 void solve() {
     int n;
     cin >> n;
     int mini = 0, maxi = 0;
-    map <int, ll> mapa;
+    vi vpos(n + 1), vneg(n + 1);
 
-    mapa[0] = 1;
-
+    vpos[0] = 1;
+    vneg[0] = 1;
     for (int i = 0; i < n; i++) {
         int a; 
         cin >> a;
-        mapa[a]++;
+
+        if (a >= 0)
+            vpos[a]++;
+        if (a <= 0)
+            vneg[abs(a)]++;
 
         mini = min(mini, a);
         maxi = max(maxi, a);
@@ -62,32 +71,28 @@ void solve() {
         cout << "0\n";
         return;
     }
-    //cout << mini << " " << maxi << "\n";
 
     ll gres = 0;
     for (int i = maxi; i >= mini; i--) {
-        map <int, ll> mapcp = mapa;
         ll lres = 1;
 
+        int lasty = vpos[maxi];
         for (int j = maxi; j > 0; j--) {
-            ll x = mapcp[j] - (j <= i ? 1LL : 0LL);
-            ll y = mapcp[j - 1] - x;
+            int x = lasty - (j <= i ? 1 : 0);
+            int y = vpos[j - 1] - x;
             lres = (lres * newton(x + y - 1, y - 1)) % MOD;
-            mapcp[j - 1] = y;
-
-            //cout << i << " " << j << " " << x << " " << y << " " << lres << "\n";
+            lasty = y;
         }
 
         for (int j = 0; j > mini; j--) {
-            mapcp[j]--;
-            ll x = mapcp[j] - (j <= i ? 1LL : 0LL);
-            ll y = mapcp[j - 1] - x;
+            lasty--;
+            int x = lasty - (j <= i ? 1 : 0);
+            int y = vneg[abs(j - 1)] - x;
             lres = (lres * newton(x + y - 1, y - 1)) % MOD;
-            mapcp[j - 1] = y;
-
-            //cout << i << " " << j << " " << x << " " << y << " " << lres << "\n";
+            lasty = y;
         }
 
+        if (lasty != 1) lres = 0;
         gres = (gres + lres) % MOD;
     }
 
