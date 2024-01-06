@@ -15,24 +15,22 @@ using vii = vector<pii>;
 
 constexpr int inf = 1e9;
 constexpr int MAXN = 1e6;
-int n;
-
-void input() {
-    cin >> n;
-}
 
 void solve() {
-    input();
+    int n;
+    cin >> n;
     vii v;
-    
+
+    bool exited = false;
     int zerocount = 0;
     for (int i = 0; i < n; i++) {
         int a;
         cin >> a;
+        if (exited) continue;
         if (a == 0) zerocount++;
-
+        
         if (v.empty()) {
-            v.push_back({a, a});
+            v.pb({a, a});
             continue;
         }
 
@@ -42,14 +40,14 @@ void solve() {
         }
         
         if (a < v.back().fi - 1) {
-            cout << "NO\n";
-            return;
+            exited = true;
+            continue;
         }
 
         pii p = v.back();
         v.pop_back();
         p.fi = min(a, p.fi);
-        p.se = min(a, p.se);
+        p.se = a;
         
         while (!v.empty() && v.back().se >= p.fi - 1) {
             p.fi = v.back().fi;
@@ -59,7 +57,7 @@ void solve() {
         v.push_back(p);
     }
 
-    if (zerocount != 1) {
+    if (exited || zerocount != 1) {
         cout << "NO\n";
         return;
     }
